@@ -12,12 +12,16 @@ Statement s := while(b): s
              | if(b): s
              | ifelse(b): s1 else: s2
 
-Condition b := markersPresent()
+Condition b := markersPresent() | movableMarkersPresent()
+             | upperBoundary() | lowerBoundary() 
+             | leftBoundary() | rightBoundary()
              | sh1 == sh2
              | cl1 == cl2
              | not b
 
 Action a := move(p1, p2) 
+          | moveUp() | moveDown() | moveRight() | moveLeft()
+          | moveTop() | moveBottom() | moveRightmost() | moveLeftmost() 
           | pickMarker()
           | putMarker()
 
@@ -48,11 +52,18 @@ class DSLParser:
         self.constants = Or([Keyword(str(i)) for i in range(1, 20)])
         self.actions = (
                 ("move(" + self.positions + "," + self.positions + ")") |
+                "moveUp()" | "moveDown()" | "moveLeft()" | "moveRight()" |
+                "moveTop()" | "moveBottom()" |
+                "moveLeftmost()" | "moveRightmost()" |
                 "pickMarker()" | "putMarker()")
+
         self.conditions = (
-                Keyword("markersPresent()") |
                 Group(self.shapes + "==" + self.shapes) |
-                Group(self.colors + "==" + self.colors))
+                Group(self.colors + "==" + self.colors) |
+                "markersPresent()" | "movableMarkersPresent()" |
+                "upperBoundary()" | "lowerBoundary()" |
+                "leftBoundary()" | "rightBoundary()")
+
         self.conditions = (self.conditions |
                            Group(Keyword("not") + self.conditions))
         block = Forward()
