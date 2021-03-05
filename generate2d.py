@@ -3,7 +3,9 @@ import os
 import argparse
 import numpy as np
 
-from karel import KarelWithCurlyParser, KarelForSynthesisParser
+from environment2D.environment import Grid2D
+from environment2D.parser import DSLParser
+from environment2D.executor import execute
 from karel import str2bool, makedirs, pprint, beautify, TimeoutError
 
 try:
@@ -14,16 +16,14 @@ except:
 
 if __name__ == '__main__':
     data_arg = argparse.ArgumentParser()
-    data_arg.add_argument('--num_train', type=int, default=1000000)
-    data_arg.add_argument('--num_test', type=int, default=5000)
-    data_arg.add_argument('--num_val', type=int, default=5000)
+    data_arg.add_argument('--num_train', type=int, default=10)
+    data_arg.add_argument('--num_test', type=int, default=5)
+    data_arg.add_argument('--num_val', type=int, default=5)
     data_arg.add_argument('--num_examples', type=int, default=2)
-    data_arg.add_argument('--parser_type', type=str, default='curly', choices=['curly', 'synthesis'])
     data_arg.add_argument('--data_dir', type=str, default='data')
     data_arg.add_argument('--max_depth', type=int, default=5)
     data_arg.add_argument('--mode', type=str, default='token', choices=['text', 'token'])
     data_arg.add_argument('--beautify', type=str2bool, default=False)
-    data_arg.add_argument('--world_height', type=int, default=8, help='Height of square grid world')
     data_arg.add_argument('--world_width', type=int, default=8, help='Width of square grid world')
     config = data_arg.parse_args()
 
@@ -32,10 +32,7 @@ if __name__ == '__main__':
     datasets = ['train', 'test', 'val']
 
     # Generate datasets
-    if config.parser_type == "curly":
-        parser = KarelWithCurlyParser()
-    elif config.parser_type == "synthesis":
-        parser = KarelForSynthesisParser()
+    parser = DSLParser()
 
     if config.mode == 'text':
         for name in datasets:

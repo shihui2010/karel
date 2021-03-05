@@ -79,7 +79,6 @@ class Grid2D:
             str += "\n"
         return str
 
-
 if __name__ == "__main__":
     env = Grid2D(n=10)
     env.set_items("yellow", "round", [2, 3])
