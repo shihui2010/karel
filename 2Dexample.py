@@ -15,7 +15,7 @@ def run(){
 }
 """
 env = Grid2D(10)
-env.set_items("yellow", "round", [2, 3])
+env.set_item("yellow", "round", [2, 3])
 print("input: ")
 print(env)
 execute(straight_program, env,
@@ -27,33 +27,34 @@ print("=============program 2===========")
 
 nested_program = """
 def run(){
-    move(0, 0);
+    move(1, 2);
     putMarker();
     while(getMarkerColor() == red){
         pickMarker();
-        ifelse(red == yellow){
-           putMarker();
-           move(1, 1);
+        ifelse(not leftBoundary()){
+           moveLeft();
         }
         else{
-           move(2, 2);
+           moveTop();
         }
     }
     putMarker();
-    move(0, 0);
+    if(markersPresent()){
+        move(0, 0);
+    }
 }
 """
 
-env.set_items("red", "round", [0, 0])
+env.set_item("red", "round", [0, 0])
 execute(nested_program, env,
         colors=["red", "yellow"], shapes=["round", "square"])
 print(env)
 
-"""
-# sort to right as a straight line
+print("===========Sort red markers to upper left===========")
+program = """
 def run(){
-    while(existUnfixedMarker()){
-        moveToUnfixedMarker();
+    while(existMovableMarkers()){
+        moveToMovableMarker();
         ifelse(getMarkerColor() == red){
             pickMarker();
             move(0,0);
@@ -61,10 +62,65 @@ def run(){
                 moveDown();
             }
             putMarker();
-            fixMarker();
         }
         else{
             fixMarker();
         }
+    }
 }
 """
+
+env = Grid2D(10)
+items = [['red', 'round', (5, 0)],
+         ['yellow', 'round', (8, 1)],
+         ['red', 'square', (2, 2)]]
+for obj in items:
+        env.set_item(*obj)
+print("unsorted")
+print(env)
+execute(program, env, colors=["red", "yellow"], shapes=["round", "square"], print_trace=True)
+print("sorted")
+print(env)
+
+print("===========Sort to lower right===========")
+program = """
+def run(){
+    repeat(3){
+        moveToMovableMarker();
+        pickMarker();
+        moveRightmost();
+        moveBottom();
+        while(markersPresent()){
+           moveUp();
+        }
+        putMarker();
+        move(0, 0);
+    }
+}
+"""
+
+env = Grid2D(10)
+items = [['red', 'round', (1, 0)],
+         ['yellow', 'round', (0, 1)],
+         ['red', 'square', (2, 2)]]
+for obj in items:
+        env.set_item(*obj)
+print("unsorted")
+print(env)
+execute(program, env, colors=["red", "yellow"], shapes=["round", "square"], print_trace=True)
+print("sorted")
+print(env)
+
+
+print("==========PutMarker Conflict=========")
+program = """
+def run(){
+     pickMarker();
+     move(2, 4);
+     putMarker();
+}
+"""
+env = Grid2D(20)
+env.set_item('red', 'round', [0, 0])
+env.set_item('red', 'round', [2, 4])
+execute(program, env, colors=['red'], shapes=['round'])
