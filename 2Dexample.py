@@ -43,8 +43,28 @@ def run(){
     move(0, 0);
 }
 """
+
 env.set_items("red", "round", [0, 0])
 execute(nested_program, env,
         colors=["red", "yellow"], shapes=["round", "square"])
 print(env)
 
+"""
+# sort to right as a straight line
+def run(){
+    while(existUnfixedMarker()){
+        moveToUnfixedMarker();
+        ifelse(getMarkerColor() == red){
+            pickMarker();
+            move(0,0);
+            while(markersPresent()){
+                moveDown();
+            }
+            putMarker();
+            fixMarker();
+        }
+        else{
+            fixMarker();
+        }
+}
+"""

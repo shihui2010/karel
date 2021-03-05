@@ -61,6 +61,14 @@ def _execute_action(env: Grid2D, action: List[str]):
     elif action[0] == "putMarker()":
         env.putMarker()
         # print("perform putMarker")
+    elif action[0] == "moveUp()":
+        env.moveUp()
+    elif action[0] == "moveDown()":
+        env.moveDown()
+    elif action[0] == "moveLeft()":
+        env.moveLeft()
+    elif action[0] == "moveRight()":
+        env.moveRight()
     else:
         raise AttributeError(f"Unknown action {action}")
 

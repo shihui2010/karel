@@ -13,13 +13,20 @@ Statement s := while(b): s
              | ifelse(b): s1 else: s2
 
 Condition b := markersPresent()
+             | existUnfixedMarker()
              | sh1 == sh2
              | cl1 == cl2
              | not b
 
 Action a := move(p1, p2) 
+          | moveUp()
+          | moveDown()
+          | moveLeft()
+          | moveRight()
+          | moveToUnfixedMarker()           
           | pickMarker()
           | putMarker()
+          | fixMarker()s
 
 Consts r := 1 | 2 | ... | 19
 
@@ -48,6 +55,7 @@ class DSLParser:
         self.constants = Or([Keyword(str(i)) for i in range(1, 20)])
         self.actions = (
                 ("move(" + self.positions + "," + self.positions + ")") |
+                "moveUp()" | "moveDown()" | "moveLeft()" | "moveRight()" |
                 "pickMarker()" | "putMarker()")
         self.conditions = (
                 Keyword("markersPresent()") |

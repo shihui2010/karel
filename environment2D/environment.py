@@ -6,6 +6,7 @@ from dataclasses import dataclass
 class Item:
     shape: str
     color: str
+    fixed: bool
 
 
 class Grid2D:
@@ -22,7 +23,7 @@ class Grid2D:
 
     def set_items(self, color: str, shape: str, loc: List[int]):
         self.__check_loc(loc)
-        self._grid[loc[0]][loc[1]] = Item(shape=shape, color=color)
+        self._grid[loc[0]][loc[1]] = Item(shape=shape, color=color, fixed=False)
 
     def __check_loc(self, loc):
         if (len(loc) != 2 or not (
@@ -31,6 +32,8 @@ class Grid2D:
 
     def markersPresent(self):
         return self._grid[self._arm_x][self._arm_y] is not None
+
+    def
 
     def getMarkerShape(self):
         if self._grid[self._arm_x][self._arm_y] is None:
@@ -52,10 +55,37 @@ class Grid2D:
             self._grid[self._arm_x][self._arm_y] = self._arm_holds
             self._arm_holds = None
 
+    def fixMarker(self):
+        if self.markersPresent():
+            self._grid[self._arm_x][self._arm_y].fixed = True
+
     def move(self, x, y):
         self.__check_loc((x, y))
         self._arm_x = x
         self._arm_y = y
+
+    def moveUp(self):
+        if 0 <= (self._arm_y - 1) < self._n:
+            self._arm_y -= 1
+
+    def moveDown(self):
+        if 0 <= (self._arm_y + 1) < self._n:
+            self._arm_y += 1
+
+    def moveRight(self):
+        if 0 <= (self._arm_x + 1) < self._n:
+            self._arm_x += 1
+
+    def moveLeft(self):
+        if 0 <= (self._arm_x - 1) < self._n:
+            self._arm_x -= 1
+
+    def moveToUnfixedMarker(self):
+        for i in range(self._n):
+            for j in range(self._n):
+                if (self._grid[i][j] is not None) and (not self._grid[i][j].fixed):
+                    self.move(i, j)
+                    break
 
     @property
     def n(self):
