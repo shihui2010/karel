@@ -4,15 +4,21 @@ import argparse
 import numpy as np
 
 from environment2D.environment import Grid2D
-from environment2D.parser import DSLParser
+from environment2D.generator import Generator
 from environment2D.executor import execute
-from karel import str2bool, makedirs, pprint, beautify, TimeoutError
 
 try:
     from tqdm import trange
 except:
     trange = range
 
+COLORS = ["red", "yellow"]
+SHAPES = ["round", "square"]
+
+def makedirs(path):
+    if not os.path.exists(path):
+        print(" [*] Make directories : {}".format(path))
+        os.makedirs(path)
 
 if __name__ == '__main__':
     data_arg = argparse.ArgumentParser()
@@ -21,10 +27,9 @@ if __name__ == '__main__':
     data_arg.add_argument('--num_val', type=int, default=5)
     data_arg.add_argument('--num_examples', type=int, default=2)
     data_arg.add_argument('--data_dir', type=str, default='data')
-    data_arg.add_argument('--max_depth', type=int, default=5)
-    data_arg.add_argument('--mode', type=str, default='token', choices=['text', 'token']) #
-    data_arg.add_argument('--beautify', type=str2bool, default=False)
-    data_arg.add_argument('--world_width', type=int, default=8, help='Width of square grid world')
+    data_arg.add_argument('--max_depth', type=int, default=6)
+    data_arg.add_argument('--mode', type=str, default='token', choices=['text', 'token'])
+    data_arg.add_argument('--world_width', type=int, default=10, help='Width of square grid world')
     config = data_arg.parse_args()
 
     # Make directories
@@ -32,55 +37,42 @@ if __name__ == '__main__':
     datasets = ['train', 'test', 'val']
 
     # Generate datasets
-    parser = DSLParser()
+    generator = Generator(config.world_width, colors=COLORS, shapes=SHAPES)
 
-    if config.mode == 'text':
-        for name in datasets:
-            data_num = getattr(config, "num_{}".format(name))
+    for name in datasets:
+        data_num = getattr(config, "num_{}".format(name))
 
-            text = ""
-            text_path = os.path.join(config.data_dir, "{}.txt".format(name))
+        inputs, outputs, codes, code_lengths = [], [], [], []
+        for _ in trange(data_num):
+            while True:
+                env = generator.random_env()
+                start = env.state
+                code = generator.random_program(stmt_max_depth=config.max_depth,
+                                                template="sort_template")
+                # print(code)
+                # print(start)
+                try:
+                    execute(code, env, colors=COLORS, shapes=SHAPES)
+                    output = env.state
+                    # print(output)
+                except RuntimeError as e:
+                    print("runtime error: ", e)
+                    continue
+                if start == output:
+                    print("no difference")
+                    continue
 
-            for _ in trange(data_num):
-                code = parser.random_code(stmt_max_depth=config.max_depth)
-                if config.beautify:
-                    code = beautify(code)
-                text += code + "\n"
+                inputs.append(start)
+                outputs.append(output)
 
-            with open(text_path, 'w') as f:
-                f.write(text)
-    else:
-        for name in datasets:
-            data_num = getattr(config, "num_{}".format(name))
+                #token_idxes = generator.lex_to_idx(code, details=True)
+                #codes.append(token_idxes)
+                #code_lengths.append(len(token_idxes))
+                break
 
-            inputs, outputs, codes, code_lengths = [], [], [], []
-            for _ in trange(data_num):
-                while True:
-                    parser.new_game(world_size=(config.world_width, config.world_height))
-                    input = parser.get_state()
-
-                    code = parser.random_code(stmt_max_depth=config.max_depth)
-                    #pprint(code)
-
-                    try:
-                        parser.run(code)
-                        output = parser.get_state()
-                    except TimeoutError:
-                        continue
-                    except IndexError:
-                        continue
-
-                    inputs.append(input)
-                    outputs.append(output)
-
-                    token_idxes = parser.lex_to_idx(code, details=True)
-                    codes.append(token_idxes)
-                    code_lengths.append(len(token_idxes))
-                    break
-
-            npz_path = os.path.join(config.data_dir, name)
-            np.savez(npz_path,
-                     inputs=inputs,
-                     outputs=outputs,
-                     codes=codes,
-                     code_lengths=code_lengths)
+        npz_path = os.path.join(config.data_dir, name)
+        np.savez(npz_path,
+                 inputs=inputs,
+                 outputs=outputs,
+                 codes=codes,
+                 code_lengths=code_lengths)

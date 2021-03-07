@@ -1,5 +1,6 @@
 from pyparsing import Keyword, Or, OneOrMore, Group, Forward
 
+
 """
 DSL: 
 
@@ -19,41 +20,40 @@ Condition b := markersPresent() | movableMarkersPresent()
              | sh1 == sh2
              | cl1 == cl2
              | not b
+             | true
 
 Action a := move(p1, p2) 
-
           | moveUp() | moveDown() | moveRight() | moveLeft()
           | moveTop() | moveBottom() | moveRightmost() | moveLeftmost() 
           | moveToMovableMarker()  
-          | pickMarker()
-          | putMarker()
-          | fixMarker()
+          | pickMarker() | putMarker() | fixMarker()
 
 Consts r := 1 | 2 | ... | 19
 
 Position p := 0 | 1 | ... | n - 1 width/height of the grid)
 
 Shape sh := round | triangle | ... |
-          | getMarkerColor()
+          | getMarkerShape()
                 
 Color cl :=  red | yellow | ... |
-          | getMarkerShape()
+          | getMarkerColor()
 """
 
 
 class DSLParser:
-    def __init__(self, n, colors, shapes):
+    def __init__(self, n, colors, shapes, max_constant=5):
         """
         :param n: length of side of the grids
         :param colors: list of color names
         :param shapes: list of shape names
         """
+
         self.colors = Or([Keyword(w) for w in colors])
         self.colors ^= Keyword("getMarkerColor()")
         self.shapes = Or([Keyword(w) for w in shapes])
         self.shapes ^= Keyword("getMarkerShape()")
         self.positions = Or([Keyword(str(i)) for i in range(n)])
-        self.constants = Or([Keyword(str(i)) for i in range(1, 20)])
+        self.constants = Or([Keyword(str(i)) for i in range(1, max_constant)])
         self.actions = (
                 ("move(" + self.positions + "," + self.positions + ")") |
                 "moveUp()" | "moveDown()" | "moveLeft()" | "moveRight()" |
@@ -68,7 +68,7 @@ class DSLParser:
                 "markersPresent()" | "movableMarkersPresent()" |
                 "existMovableMarkers()" |
                 "upperBoundary()" | "lowerBoundary()" |
-                "leftBoundary()" | "rightBoundary()")
+                "leftBoundary()" | "rightBoundary()" | "true")
 
         self.conditions = (self.conditions |
                            Group(Keyword("not") + self.conditions))
@@ -81,7 +81,7 @@ class DSLParser:
                       "{" + Group(block) + "}") |
                 Group(Keyword("ifelse") + "(" + self.conditions + ")" +
                       "{" + Group(block) + "}" +
-                      Keyword("else") + "{" + Group(block) + "}")|
+                      Keyword("else") + "{" + Group(block) + "}") |
                 Group(self.actions + ";"))
         block << OneOrMore(stmt)
         # stmt ^= block
@@ -119,3 +119,4 @@ if __name__ == "__main__":
     print(parser.statements.parseString("move(1, 2); "
                                         "repeat(10){move(1, 2);}"))
     print(parser.parse_string(sample_program))
+

@@ -15,6 +15,7 @@ def execute(program: str, env: Grid2D, colors, shapes,
 
 def _execute_block(env: Grid2D, program: List, print_trace=False):
     assert type(program) != str, "Execution error"
+    stack = 0
     for block in program:
         # print("this block", block)
         if isinstance(block[0], pyparsing.ParseResults):
@@ -37,12 +38,14 @@ def _execute_block(env: Grid2D, program: List, print_trace=False):
             while _execute_cond(env, block[2]):
                 # print("inside while")
                 _execute_block(env, block[5], print_trace)
+                stack += 1
+                if stack > 100:
+                    raise RuntimeError(f"While condition {block[2]} looped >100 times")
             # print("exit while")
         elif block[0] == "repeat":
             if print_trace:
                 print(f"execute repeat {block[2]}")
             for i in range(int(block[2])):
-                print("repeat ", i)
                 _execute_block(env, block[5], print_trace)
         elif block[0] == "ifelse":
             if print_trace:
@@ -56,6 +59,7 @@ def _execute_block(env: Grid2D, program: List, print_trace=False):
                 _execute_block(env, block[9], print_trace)
         else:
             _execute_action(env, block, print_trace)
+
 
 
 def _execute_action(env: Grid2D, action: List[str], print_trace=False):
@@ -85,6 +89,8 @@ def _execute_cond(env: Grid2D, condition):
                          "upperBoundary()", "lowerBoundary()",
                          "leftBoundary()", "rightBoundary()"]:
             return env.__getattribute__(condition[:-2])()
+        elif condition == "true":
+            return True
         else:
             raise AttributeError(f"unknown condition {condition}")
     if condition[0] == "not":

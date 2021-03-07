@@ -64,6 +64,8 @@ class Grid2D:
             if self._grid[self._arm_x][self._arm_y].movable:
                 self._arm_holds = self._grid[self._arm_x][self._arm_y]
                 self._grid[self._arm_x][self._arm_y] = None
+            else:
+                raise Exception("Unpickable marker")
 
     def putMarker(self):
         if not self.markersPresent() and self._arm_holds is not None:
@@ -71,7 +73,7 @@ class Grid2D:
             self._grid[self._arm_x][self._arm_y] = self._arm_holds
             self._arm_holds = None
         elif self.markersPresent():
-            raise RuntimeError("Object exists")
+            raise Exception("Object exists")
 
     def fixMarker(self):
         if self.markersPresent():
@@ -83,11 +85,16 @@ class Grid2D:
         self._arm_y = y
 
     def moveToMovableMarker(self):
+        end_i, end_j = 0, 0
         for i in range(self._n):
             for j in range(self._n):
                 if (self._grid[i][j] is not None) and self._grid[i][j].movable:
                     self.move(i, j)
-                    break
+                    return
+                else:
+                    end_i, end_j = i, j
+        self.move(end_i, end_j)
+
 
     def moveDown(self):
         self._arm_y = min(self._n - 1, self._arm_y + 1)
@@ -129,7 +136,8 @@ class Grid2D:
     def n(self):
         return self._n
 
-    def __repr__(self):
+    @property
+    def state(self):
         str = ""
         for cid in range(self._n):
             for rid in range(self._n):
@@ -144,6 +152,10 @@ class Grid2D:
                     str += "."
             str += "\n"
         return str
+
+    def __repr__(self):
+        repr = self.state
+        return repr
 
     @property
     def arm_loc(self):

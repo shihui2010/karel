@@ -123,4 +123,22 @@ def run(){
 env = Grid2D(20)
 env.set_item('red', 'round', [0, 0])
 env.set_item('red', 'round', [2, 4])
-execute(program, env, colors=['red'], shapes=['round'])
+try:
+    execute(program, env, colors=['red'], shapes=['round'])
+except Exception as e:
+    print(e)
+
+
+print("___________test____________")
+program = """
+def run() { repeat( 4 ){ moveToMovableMarker(); if( true ){ pickMarker(); moveLeftmost() ; while(markersPresent()){ moveLeftmost() ; } putMarker(); } } }
+"""
+env = Grid2D(20)
+env.set_item('red', 'round', [1, 0])
+env.set_item('red', 'round', [2, 4])
+print("unsorted")
+print(env)
+execute(program, env, colors=["red", "yellow"], shapes=["round", "square"], print_trace=True)
+print("sorted")
+print(env)
+
