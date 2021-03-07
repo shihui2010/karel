@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
                 inputs.append(start)
                 outputs.append(output)
-
+                codes.append(code)
                 #token_idxes = generator.lex_to_idx(code, details=True)
                 #codes.append(token_idxes)
                 #code_lengths.append(len(token_idxes))
