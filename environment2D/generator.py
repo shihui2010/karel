@@ -1,45 +1,65 @@
 from random import randrange, choice
 from .environment import Grid2D
-
+from .parser import DSLParser
 
 class Generator:
+    actions_list = [["move(", "position_token", ",", "position_token", ")"],
+                    "moveUp()", "moveDown()", "moveLeft()", "moveRight()",
+                    "moveTop()", "moveBottom()",
+                    "moveLeftmost()", "moveRightmost()",
+                    "moveToMovableMarker()",
+                    "pickMarker()", "putMarker()", "fixMarker()"]
+
+    actions_move = ["moveUp()", "moveDown()", "moveLeft()", "moveRight()",
+                    "moveTop()", "moveBottom()",
+                    "moveLeftmost()", "moveRightmost()"]
+    conditions_list = [["getMarkerColor()", "==", "color_token"],
+                       ["getMarkerShape()", "==", "shape_token"],
+                        "markersPresent()", "movableMarkersPresent()",
+                        "existMovableMarkers()",
+                        "upperBoundary()", "lowerBoundary()",
+                        "leftBoundary()", "rightBoundary()"]
+
+    conditions_marker = [["getMarkerColor()", "==", "color_token"],
+                         ["getMarkerShape()", "==", "shape_token"], "true"]
+    statements_list = \
+        [["repeat", "(", "const_token", ")", "{", "stmt_token", "}"],
+         ["stmt_token", "stmt_token"],
+         ["action_token", ";"],
+         ["if", "(", "condition_token", ")", "{", "stmt_token", "}"],
+         ["ifelse", "(", "condition_token", ")", "{", "stmt_token", "}",
+          "else", "{", "stmt_token", "}"]]
+
+    other_tokens = ['def', 'run()', "while", "true"]
+
+
     def __init__(self, n, colors, shapes, max_constant=5):
+
         self.n = n
         self.max_constant = max_constant
         self.colors_list = colors
         self.shapes_list = shapes
-        self.actions_list = [["move(", "position_token", ",", "position_token", ")"],
-                             "moveUp()", "moveDown()", "moveLeft()", "moveRight()",
-                             "moveTop()", "moveBottom()",
-                             "moveLeftmost()", "moveRightmost()",
-                             "moveToMovableMarker()",
-                             "pickMarker()", "putMarker()", "fixMarker()"]
 
-        self.actions_move = ["moveUp()", "moveDown()", "moveLeft()", "moveRight()",
-                             "moveTop()", "moveBottom()",
-                             "moveLeftmost()", "moveRightmost()"]
-        self.actions_empty = [["move(", "position_token", ",", "position_token", ")"],
-                              "moveToMovableMarker()",
-                              "pickMarker()", "fixMarker()"]
+        tokens = list(set(self.flatten(self.actions_list +
+                                       self.conditions_list +
+                                       self.statements_list +
+                                       self.other_tokens)))
+        int_tokens = [str(num) for num in range(self.max_constant)]
+        self.tokens = tokens + int_tokens + colors + shapes
+        self.idx_to_token = {idx: token for idx, token in enumerate(self.tokens)}
+        self.token_to_idx = {token: idx for idx, token in self.idx_to_token.items()}
 
-        self.conditions_list = [["getMarkerColor() ==", "color_token"],
-                                ["getMarkerShape() ==", "shape_token"],
-                                "markersPresent()", "movableMarkersPresent()",
-                                "existMovableMarkers()",
-                                "upperBoundary()", "lowerBoundary()",
-                                "leftBoundary()", "rightBoundary()"]
+        self.parser = DSLParser(n, colors, shapes, max_constant)
 
-        self.conditions_marker = [["getMarkerColor() ==", "color_token"],
-                                  ["getMarkerShape() ==", "shape_token"], "true"]
-        self.statements_list = \
-            [["repeat(", "const_token", ")", "{", "stmt_token", "}"],
-             ["stmt_token", "stmt_token"],
-             ["action_token", ";"],
-             ["if(", "condition_token", ")", "{", "stmt_token", "}"],
-             ["ifelse(", "condition_token", ")", "{", "stmt_token", "}",
-              "else", "{", "stmt_token", "}"]]
+    def code_to_idx(self, code):
+        parsed = self.flatten(self.parser.parse_string(code))
+        tokens = [self.token_to_idx[c] for c in parsed]
+        return tokens
 
-        self.holding = False
+    def idx_to_code(self, idx):
+        code = [self.idx_to_token[c] for c in idx]
+        code = " ".join(code)
+        return code
 
     def random_env(self):
         env = Grid2D(self.n)
@@ -134,11 +154,24 @@ class Generator:
 
         return choice([template_while, template_repeat])
 
+    def flatten(self, l):
+        newl = []
+        for i in l:
+            if not isinstance(i, str):
+                newl += self.flatten(i)
+            else:
+                newl.append(i)
+        return newl
+
 
 if __name__ == "__main__":
     generator = Generator(10, ["red", "yellow"], ["round", "square"])
     program = generator.random_program(6)
     print(program)
     program = generator.random_program(6, template="sort_template")
+    print(program)
+    tokenized = generator.code_to_idx(program)
+    print(tokenized)
+    program = generator.idx_to_code(tokenized)
     print(program)
 
