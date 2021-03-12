@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import os
 import argparse
-import json
 import numpy as np
+import tensorflow as tf
 from collections import namedtuple
 
-from environment2D.environment import Grid2D
 from environment2D.generator import Generator
 from environment2D.executor import execute
 
@@ -57,11 +56,11 @@ if __name__ == '__main__':
             for i in range(config.num_in_out):
                 while True:
                     env = generator.random_env()
-                    start = env.state
+                    start = env.to_tensor(colors=COLORS, shapes=SHAPES)
                     # print(start)
                     try:
                         execute(code, env, colors=COLORS, shapes=SHAPES)
-                        output = env.state
+                        output = env.to_tensor(colors=COLORS, shapes=SHAPES)
                         # print(output)
                     except RuntimeError as e:
                         print("runtime error: ", e)
@@ -69,7 +68,7 @@ if __name__ == '__main__':
                     except Exception as e:
                         print("Exception: ", e)
                         continue
-                    if start == output:
+                    if (start == output).all():
                         same_in_out += 1
                     code_ins.append(start)
                     code_outs.append(output)
