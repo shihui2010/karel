@@ -2,8 +2,6 @@
 import os
 import argparse
 import numpy as np
-import tensorflow as tf
-from collections import namedtuple
 
 from environment2D.generator import Generator
 from environment2D.executor import execute
@@ -15,8 +13,6 @@ except:
 
 COLORS = ["red", "yellow"]
 SHAPES = ["round", "square"]
-Data = namedtuple('Data', 'input, output, code')
-
 
 def makedirs(path):
     if not os.path.exists(path):
