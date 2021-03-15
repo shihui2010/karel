@@ -21,9 +21,9 @@ def makedirs(path):
 
 if __name__ == '__main__':
     data_arg = argparse.ArgumentParser()
-    data_arg.add_argument('--num_train', type=int, default=500)
-    data_arg.add_argument('--num_test', type=int, default=100)
-    data_arg.add_argument('--num_val', type=int, default=100)
+    data_arg.add_argument('--num_train', type=int, default=50000)
+    data_arg.add_argument('--num_test', type=int, default=1000)
+    data_arg.add_argument('--num_val', type=int, default=1000)
     data_arg.add_argument('--num_in_out', type=int, default=10)
     data_arg.add_argument('--data_dir', type=str, default='data')
     data_arg.add_argument('--max_depth', type=int, default=6)
