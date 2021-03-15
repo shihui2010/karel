@@ -13,6 +13,8 @@ class Generator:
     actions_move = ["moveUp()", "moveDown()", "moveLeft()", "moveRight()",
                     "moveTop()", "moveBottom()",
                     "moveLeftmost()", "moveRightmost()"]
+    relative_move = ["moveUp()", "moveDown()", "moveLeft()", "moveRight()"]
+
     conditions_list = [["getMarkerColor()", "==", "color_token"],
                        ["getMarkerShape()", "==", "shape_token"],
                         "markersPresent()", "movableMarkersPresent()",
@@ -111,8 +113,11 @@ class Generator:
         return choice(self.actions_move)
 
     def random_move_set(self):
-        moves = ["move_token", ";"] * randrange(3)
+        moves = ["move_token", ";"] * randrange(1, 3)
         return moves
+
+    def random_relative_move(self):
+        return choice(self.relative_move)
 
     def random_condition(self):
         return choice(self.conditions_list)
@@ -137,9 +142,10 @@ class Generator:
         template_while = ["while(existMovableMarkers()){",
                           "moveToMovableMarker();",
                           "ifelse(", "marker_condition_token", "){",
-                          "pickMarker();", "move_set_token",
+                          "pickMarker();",
+                          "move_set_token",
                           "while(markersPresent()){",
-                          "move_token", ";", "}",
+                          "relative_move_token", ";", "}",
                           "putMarker();", "}",
                           "else{", "fixMarker();", "}", "}"]
 
@@ -149,7 +155,7 @@ class Generator:
                            "pickMarker();",
                            "move_set_token",
                            "while(markersPresent()){",
-                           "move_token", ";", "}",
+                           "relative_move_token", ";", "}",
                            "putMarker();", "}", "}"]
 
         return choice([template_while, template_repeat])

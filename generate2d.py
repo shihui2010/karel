@@ -21,9 +21,9 @@ def makedirs(path):
 
 if __name__ == '__main__':
     data_arg = argparse.ArgumentParser()
-    data_arg.add_argument('--num_train', type=int, default=500)
-    data_arg.add_argument('--num_test', type=int, default=100)
-    data_arg.add_argument('--num_val', type=int, default=100)
+    data_arg.add_argument('--num_train', type=int, default=10000)
+    data_arg.add_argument('--num_test', type=int, default=1000)
+    data_arg.add_argument('--num_val', type=int, default=1000)
     data_arg.add_argument('--num_in_out', type=int, default=10)
     data_arg.add_argument('--data_dir', type=str, default='data')
     data_arg.add_argument('--max_depth', type=int, default=6)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     for name in datasets:
         data_num = getattr(config, "num_{}".format(name))
-
+        errors = {}
         inputs, outputs, codes, codes_str, code_lengths = [], [], [], [], []
         for _ in trange(data_num):
             code = generator.random_program(stmt_max_depth=config.max_depth,
@@ -50,28 +50,37 @@ if __name__ == '__main__':
             code_outs = []
             same_in_out = 0
             for i in range(config.num_in_out):
-                while True:
-                    env = generator.random_env()
-                    start = env.to_tensor(colors=COLORS, shapes=SHAPES)
-                    # print(start)
-                    try:
-                        execute(code, env, colors=COLORS, shapes=SHAPES)
-                        output = env.to_tensor(colors=COLORS, shapes=SHAPES)
-                        # print(output)
-                    except RuntimeError as e:
-                        print("runtime error: ", e)
-                        continue
-                    except Exception as e:
-                        print("Exception: ", e)
-                        continue
-                    if (start == output).all():
-                        same_in_out += 1
-                    code_ins.append(start)
-                    code_outs.append(output)
+                env = generator.random_env()
+                start = env.to_tensor(colors=COLORS, shapes=SHAPES)
+                # print(start)
+                try:
+                    execute(code, env, colors=COLORS, shapes=SHAPES)
+                    output = env.to_tensor(colors=COLORS, shapes=SHAPES)
+                    # print(output)
+                except RuntimeError as e:
+                    # print("runtime error: ", e)
+                    if e in errors.keys():
+                        errors[e] += 1
+                    else:
+                        errors[e] = 1
                     break
+                except Exception as e:
+                    # print("Exception: ", e)
+                    if e in errors.keys():
+                        errors[e] += 1
+                    else:
+                        errors[e] = 1
+                    break
+                if (start == output).all():
+                    same_in_out += 1
+                code_ins.append(start)
+                code_outs.append(output)
 
             if same_in_out == config.num_in_out:
                 print("no action done by program")
+                continue
+            if len(code_ins) == config.num_in_out \
+                    or len(code_outs) != config.num_in_out:
                 continue
 
             token_idxes = generator.code_to_idx(code)
@@ -82,6 +91,7 @@ if __name__ == '__main__':
             inputs.append(code_ins)
             outputs.append(code_outs)
 
+        print(errors)
         npz_path = os.path.join(config.data_dir, name)
         np.savez(npz_path,
                  inputs=inputs,

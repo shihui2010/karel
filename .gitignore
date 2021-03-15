@@ -4,7 +4,7 @@ logs
 
 # Data
 *.txt
-#*.npz
+*.npz
 *.out
 
 # ply
