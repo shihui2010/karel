@@ -40,10 +40,10 @@ class Generator:
         self.colors_list = colors
         self.shapes_list = shapes
 
-        tokens = list(set(self.flatten(self.actions_list +
+        tokens = sorted(list(set(self.flatten(self.actions_list +
                                        self.conditions_list +
                                        self.statements_list +
-                                       self.other_tokens)))
+                                       self.other_tokens))))
         int_tokens = [str(num) for num in range(self.max_constant)]
         self.tokens = tokens + int_tokens + colors + shapes
         self.idx_to_token = {idx: token for idx, token in enumerate(self.tokens)}
